@@ -1,5 +1,13 @@
 <?php
 header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+// Preflight request handle karein
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit(0);
+}
+header('Access-Control-Allow-Origin: *');
 header('Content-Type: application/json');
 
 // 🔑 PASSPHRASE (Must match your loader)
